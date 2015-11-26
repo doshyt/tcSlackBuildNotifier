@@ -272,15 +272,21 @@ public class SlackNotificationImpl implements SlackNotification {
         if(showBuildAgent == null || showBuildAgent){
             firstDetailLines.add("Agent: " + this.payload.getAgentName());
         }
+        
+        
         if(this.payload.getIsComplete() && (showElapsedBuildTime == null || showElapsedBuildTime)){
             firstDetailLines.add("Elapsed: " + formatTime(this.payload.getElapsedTime()));
         }
 
+ 
         attachment.addField(this.payload.getBuildName(), StringUtil.join(firstDetailLines, "\n"), false);
-
+        List<String> buildDetailLines = new ArrayList<String>();   
         if(showFailureReason && this.payload.getBuildResult() == SlackNotificationPayloadContent.BUILD_STATUS_FAILURE){
-            if(this.payload.getFailedBuildMessages().size() > 0) {
-                attachment.addField("Reason", StringUtil.join(", ", payload.getFailedBuildMessages()), false);
+        	buildDetailLines.add(this.payload.getStatusText());
+        	buildDetailLines.add("Build ISO will not be published!");
+            attachment.addField("Build Result: ", StringUtil.join(buildDetailLines,"\n"), false);  
+        	if(this.payload.getFailedBuildMessages().size() > 0) {
+                attachment.addField("Failure Reason:", StringUtil.join(", ", payload.getFailedBuildMessages()), false);
             }
             if(this.payload.getFailedTestNames().size() > 0){
                 ArrayList<String> failedTestNames = payload.getFailedTestNames();
@@ -293,7 +299,10 @@ public class SlackNotificationImpl implements SlackNotification {
                 attachment.addField("Failed Tests", StringUtil.join(", ", failedTestNames) + truncated, false);
             }
         }
-
+        //if (this.payload.getBuildResult() == SlackNotificationPayloadContent.BUILD_STATUS_FAILURE || this.payload.getBuildResult() == SlackNotificationPayloadContent.BUILD_STATUS_SUCCESS) {
+       // if (this.payload.getIsCompleteBuild()==true){
+       // 	attachment.addField("Build Result", StringUtil.join(", ", payload.getStatusText()), false);
+       // }
         StringBuilder sbCommits = new StringBuilder();
 
         List<Commit> commits = this.payload.getCommits();

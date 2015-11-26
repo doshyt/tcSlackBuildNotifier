@@ -73,9 +73,10 @@ public class SlackNotificationPayloadContent {
     private String color;
     private long elapsedTime;
     private boolean isComplete;
+    private boolean isCompleteBuild;
     private ArrayList<String> failedBuildMessages = new ArrayList<String>();
     private ArrayList<String> failedTestNames = new ArrayList<String>();
-
+    private String statusText;
     public SlackNotificationPayloadContent(){
 
         }
@@ -106,8 +107,14 @@ public class SlackNotificationPayloadContent {
             populateCommits(sRunningBuild);
     		populateArtifacts(sRunningBuild);
             populateResults(sRunningBuild);
+           	populateStatusText(sRunningBuild);
 		}
 
+	private void populateStatusText(SRunningBuild sRunningBuild){
+		String textStatusDescriptor = sRunningBuild.getStatusDescriptor().getText();
+			setStatusText(textStatusDescriptor);
+	}
+		
     private void populateResults(SRunningBuild sRunningBuild) {
         List<BuildProblemData> failureReasons = sRunningBuild.getFailureReasons();
         if(failureReasons == null){
@@ -275,8 +282,11 @@ public class SlackNotificationPayloadContent {
 
             isComplete = buildState == BuildStateEnum.BUILD_FINISHED;
 
-			if (buildState == BuildStateEnum.BEFORE_BUILD_FINISHED || buildState == BuildStateEnum.BUILD_FINISHED){ 
-				if (sRunningBuild.getStatusDescriptor().isSuccessful()){
+                    
+		   //if (buildState == BuildStateEnum.BEFORE_BUILD_FINISHED || buildState == BuildStateEnum.BUILD_FINISHED){
+           if (buildState == BuildStateEnum.BUILD_FINISHED){
+        	   setIsCompleteBuild(true);
+        	   if (sRunningBuild.getStatusDescriptor().isSuccessful()){
 					this.buildResult = BUILD_STATUS_SUCCESS;
                     this.color = "good";
 					if (this.buildResultPrevious.equals(this.buildResult)){
@@ -295,11 +305,13 @@ public class SlackNotificationPayloadContent {
 					}
 				}
 			} else {
+				this.setIsComplete(false);
 				this.buildResult = BUILD_STATUS_RUNNING;
 				this.buildResultDelta = BUILD_STATUS_UNKNOWN;
 			}
 			
 		}
+
 
 		// Getters and setters
 		
@@ -308,11 +320,12 @@ public class SlackNotificationPayloadContent {
 			return buildResult;
 		}
 
+	
 		public void setBuildResult(String buildResult) {
 			this.buildResult = buildResult;
 		}
 
-
+					
 		public String getBuildFullName() {
 			return buildFullName;
 		}
@@ -346,10 +359,6 @@ public class SlackNotificationPayloadContent {
 		}
 
 
-
-
-
-
 		public String getAgentName() {
 			return agentName;
 		}
@@ -372,9 +381,16 @@ public class SlackNotificationPayloadContent {
 			return text;
 		}
 
+		public String getStatusText() {
+			return statusText;
+		}
 
 		public void setText(String text) {
 			this.text = text;
+		}
+
+	   public void setStatusText(String text) {
+			this.statusText = text;
 		}
 
 
@@ -419,6 +435,15 @@ public class SlackNotificationPayloadContent {
     public void setIsComplete(boolean isComplete) {
         this.isComplete = isComplete;
     }
+    
+    public boolean getIsCompleteBuild() {
+        return isCompleteBuild;
+    }
+
+    public void setIsCompleteBuild(boolean isCompleteBuild) {
+        this.isCompleteBuild = isCompleteBuild;
+    }
+
 
     public boolean getIsFirstFailedBuild() {
         return isFirstFailedBuild;
